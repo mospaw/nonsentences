@@ -2,6 +2,8 @@
 
 /**
  * Nonsentences
+ *
+ * V1.0 - 2015-May-03
  * 
  * A nonsense sentence generator.
  * Copyright 2015 Chris Mospaw

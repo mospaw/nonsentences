@@ -1,0 +1,10 @@
+more
+less
+far more
+far less
+much more
+much less
+quite a bit more
+quite a bit less
+greater than
+less than

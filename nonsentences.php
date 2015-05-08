@@ -29,6 +29,7 @@ class Nonsentences {
 	protected $vowels = array( 'a', 'e', 'i', 'o', 'u' );
 	protected $wordlists = array();
 	protected $punctuation = array( ',', '.', '?', '!' );
+	protected $sentence_structures;
 
 	public $min_sentences = 3;
 	public $max_sentences;
@@ -36,7 +37,7 @@ class Nonsentences {
 	public $max_paragraphs;
 	public $paragraph_wrapper = array ( '<p>', '</p>' );
 
-	function __construct( $args ) {
+	public function __construct( $args ) {
 
 		if ( isset ( $args['min_sentences'] ) ) {
 			$this->min_sentences = $args['min_sentences'];
@@ -58,7 +59,7 @@ class Nonsentences {
 			$this->paragraph_wrapper = $args['paragraph_wrapper'];
 		}
 
-		$this->output = '';
+		//$this->output = '';
 
 		foreach ($this->lists as $part) {
 			$this->wordlists[$part] = file( NONSENSE_PATH . "$part.txt");
@@ -76,14 +77,12 @@ class Nonsentences {
 			split(' ', '[interjections] ! The [nouns] [verbs] the [nouns] .'),
 		);
 
-//print_r( $this->sentence_structures );
-
 	}
 
 	/**
 	 * Get a number of nonsense sentences
 	 */
-	function sentences( ) {
+	public function sentences( ) {
 
 		if ( $this->max_sentences === null ) {
 			$this->max_sentences = $this->min_sentences;
@@ -101,7 +100,7 @@ class Nonsentences {
 	}
 
 
-	function paragraphs( ) {
+	public function paragraphs( ) {
 
 		if ( $this->max_paragraphs === null ) {
 			$this->max_paragraphs = $this->min_paragraphs;
@@ -125,9 +124,13 @@ class Nonsentences {
 	/** 
 	 * Generate one nonsense sentence
 	 */
-	function sentence() {
+	public function sentence() {
+	
+		$wordcount = array();
+
 		$type = rand( 0, (count($this->sentence_structures) - 1 ) );
-		
+
+		$nouns = '';
 		for ( $i=0; $i < 2; $i++ ) {
 			foreach ($this->lists as $part) {
 				${$part}[$i] = trim($this->wordlists[$part][rand(0,count($this->wordlists[$part]) - 1)]);
@@ -140,13 +143,12 @@ class Nonsentences {
 		$sentence = '';
 		foreach ($sentence_structure as $position => $word) {
 
-
 			switch (1) {
 
 				case ( $position == 0 ) :
 					$word = str_replace( array( '[' , ']' ), array ( '', ''), $word );
 					$sentence .= ucfirst( ${$word}[ $wordcount[$word] ] );
-					$wordcount[$word]++;
+					$wordcount[ $word ]++;
 				break;
 
 				case ( $word == '[plural_nouns]') :
@@ -157,7 +159,7 @@ class Nonsentences {
 				case ( substr($word, 0, 1) == '[') :
 					$word = str_replace( array( '[' , ']' ), array ( '', ''), $word );
 					$sentence .= ${$word}[ $wordcount[$word] ];
-					$wordcount[$word]++;
+					$wordcount[ $word ]++;
 				break;
 
 				case ( ! in_array( $word, $this->punctuation) ) :
@@ -175,33 +177,7 @@ class Nonsentences {
 
 		}
 		
-		//$sentence = trim( $sentence) . '.';
-
 		return $sentence;
 	}
 	
-
-//	function word($numWords = 1) {
-//		$word_list = '';
-//		
-//		for ($count = 1; $count <= $numWords; $count++) {
-//			if ($count > 1) {
-//				$word_list .= ' ';
-//			}
-//			$list_to_use = rand(0, sizeof($this->wordlists) - 1);
-//			$word_to_use = rand(0, sizeof($this->wordlists[$this->lists[$list_to_use]]) - 1);
-//			
-//			$word = $this->wordlists[$this->lists[$list_to_use]][$word_to_use];
-//			
-//			if (strpos($word, ' ')) {
-//				$word = substr_replace($word, '', strpos($word, ' '));
-//			}
-//			
-//			$word = trim($word);
-//			$word_list .= strtolower($word);
-//		}
-//		$this->output = $word_list;
-//		return $this->output;
-//	}
 }
-

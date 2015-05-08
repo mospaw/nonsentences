@@ -21,8 +21,6 @@
  *
  */
 
-define( "NONSENSE_PATH", realpath( dirname( __FILE__ ) ) . '/db/' ); 
-
 class Nonsentences {
 
 	protected $lists = array( "interjections", "determiners", "adjectives", "nouns", "adverbs", "verbs", "prepositions", "conjunctions", "comparatives" );
@@ -59,10 +57,8 @@ class Nonsentences {
 			$this->paragraph_wrapper = $args['paragraph_wrapper'];
 		}
 
-		//$this->output = '';
-
 		foreach ($this->lists as $part) {
-			$this->wordlists[$part] = file( NONSENSE_PATH . "$part.txt");
+			$this->wordlists[$part] = file( realpath( dirname( __FILE__ ) ) . '/db/' . $part . '.txt' );
 		}
 
 		// Sentence structures ... each is randomly selected. The first tow are weighted since they're a bit more "normal",

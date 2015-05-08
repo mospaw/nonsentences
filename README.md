@@ -13,6 +13,12 @@ Turn add [WP-CLI](http://wp-cli.org/) support to generate a post or posts with g
 
 # Changes
 
+## V1.1
+
+- Add paragraphs output
+- Add passed parameters to control the number of paragraphs, sentences, and a paragraph wrapper.
+- Removed dead code
+
 ## V1.0
 
 - Imported latest known version of "nonsense generator"

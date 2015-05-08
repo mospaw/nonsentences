@@ -2,16 +2,14 @@
 
 include_once ('nonsentences.php');
 
-$nonsentence = new Nonsentences();
+$args = array(
+	'min_sentences' => 3,
+	'max_sentences' => 20,
+	'min_paragraphs' => 2,
+	'max_paragraphs' => 10,
+	'paragraph_wrapper' => array ( '', "\n\n" ),
+);
 
-$paragraphs = rand (2, 10);
+$nonsentence = new Nonsentences( $args );
 
-for ( $x = 0; $x < $paragraphs; $x++ ) {
-
-	$sentences = rand ( 3, 20 );
-	echo '<p>' . $nonsentence->sentences( $sentences ) . '</p>' . PHP_EOL;
-
-
-}
-
-
+echo $nonsentence->paragraphs();

@@ -1,9 +1,8 @@
 <?php
-
 /**
  * Nonsentences
  *
- * V1.0 - 2015-May-03
+ * V1.1 - 2015-May-08
  * 
  * A nonsense sentence generator.
  * Copyright 2015 Chris Mospaw
@@ -22,58 +21,7 @@
  *
  */
 
-define( "NONSENSE_PATH", realpath(dirname(__FILE__)) . '/db/' ); 
-
-/*
-function nonsentence ($numSentences = 1, $type = null) {
-	$lists = array("interjections", "determiners", "adjectives", "nouns", "adverbs", "verbs", "prepositions", "conjunctions", "comparatives");
-	$vowels = array('a','e','i','o','u');
-	
-	$type = rand(0,1);
-	
-	foreach ($lists as $part) ${$part} = file(NONSENSE_PATH."$part.txt");
-	
-	for ($i=0; $i<2; $i++) {
-		foreach ($lists as $part) ${$part}[$i]	= trim(${$part}[rand(0,count(${$part}) - 1)]);
-	
-		if ($determiners[$i] == "a")
-			foreach ($vowels as $vowel)
-				if (($type && ($adjectives[$i][0] == $vowel)) || (!$type && ($nouns[$i][0] == $vowel))) $determiners[$i] = "an";
-		
-	}
-	
-	$sentence = ($type ?
-	ucwords($determiners[0]) . " $adjectives[0] $nouns[0] $adverbs[0] $verbs[0] $prepositions[0] $determiners[1] $adjectives[1] $nouns[1]." :
-	"$interjections[0], $determiners[0] $nouns[0] is $comparatives[0] $adjectives[0] than $determiners[1] $adjectives[1] $nouns[1].");
-	
-	if ($numSentences > 1) return $sentence . " " . nonsentence($numSentences-1);
-	return $sentence;
-}
-
-function nonsense_word($numWords = 1) {
-	$lists = array("interjections", "determiners", "adjectives", "nouns", "adverbs", "verbs", "prepositions", "conjunctions", "comparatives");
-	foreach ($lists as $part) $wordlists[] = file(NONSENSE_PATH."$part.txt");
-	
-	$word_list = '';
-	
-	for ($count = 1; $count <= $numWords; $count++) {
-		if ($count > 1) $word_list .= ' ';
-		$list_to_use = mt_rand(0, sizeof($wordlists) - 1);
-		$word_to_use = mt_rand(0, sizeof($wordlists[$list_to_use]) - 1);
-		
-		$word = $wordlists[$list_to_use][$word_to_use];
-		
-		if (strpos($word, ' ')) {
-			$word = substr_replace($word, '', strpos($word, ' '));
-		}
-		
-		$word = trim($word);
-		$word_list .= strtolower($word);
-	}
-	return $word_list;
-}
-*/
-
+define( "NONSENSE_PATH", realpath( dirname( __FILE__ ) ) . '/db/' ); 
 
 class Nonsentences {
 
@@ -82,8 +30,33 @@ class Nonsentences {
 	protected $wordlists = array();
 	protected $punctuation = array( ',', '.', '?', '!' );
 
+	public $min_sentences = 3;
+	public $max_sentences;
+	public $min_paragraphs = 3;
+	public $max_paragraphs;
+	public $paragraph_wrapper = array ( '<p>', '</p>' );
 
-	function __construct() {
+	function __construct( $args ) {
+
+		if ( isset ( $args['min_sentences'] ) ) {
+			$this->min_sentences = $args['min_sentences'];
+		}
+
+		if ( isset ( $args['max_sentences'] ) ) {
+			$this->max_sentences = $args['max_sentences'];
+		}
+
+		if ( isset ( $args['min_paragraphs'] ) ) {
+			$this->min_paragraphs = $args['min_paragraphs'];
+		}
+
+		if ( isset ( $args['max_paragraphs'] ) ) {
+			$this->max_paragraphs = $args['max_paragraphs'];
+		}
+
+		if ( isset ( $args['paragraph_wrapper'] ) ) {
+			$this->paragraph_wrapper = $args['paragraph_wrapper'];
+		}
 
 		$this->output = '';
 
@@ -110,7 +83,13 @@ class Nonsentences {
 	/**
 	 * Get a number of nonsense sentences
 	 */
-	function sentences( $count = 1 ) {
+	function sentences( ) {
+
+		if ( $this->max_sentences === null ) {
+			$this->max_sentences = $this->min_sentences;
+		}
+
+		$count = rand ( $this->min_sentences, $this->max_sentences );
 
 		$output = '';
 
@@ -118,13 +97,35 @@ class Nonsentences {
 			$output .= $this->sentence() . ' ';
 		}
 		return $output;
+
+	}
+
+
+	function paragraphs( ) {
+
+		if ( $this->max_paragraphs === null ) {
+			$this->max_paragraphs = $this->min_paragraphs;
+		}
+
+		$count = rand ( $this->min_paragraphs, $this->max_paragraphs );
+
+		$output = '';
+
+		for ( $x=0; $x < $count; $x++ ) {
+			$output .= $this->paragraph_wrapper[0];
+			$output .= $this->sentences() . ' ';
+			$output .= $this->paragraph_wrapper[1];
+		}
+
+		return $output . PHP_EOL;		
+
 	}
 
 
 	/** 
-	 * Generate on nonsense sentence
+	 * Generate one nonsense sentence
 	 */
-	function sentence($numSentences = 1) {
+	function sentence() {
 		$type = rand( 0, (count($this->sentence_structures) - 1 ) );
 		
 		for ( $i=0; $i < 2; $i++ ) {
@@ -180,27 +181,27 @@ class Nonsentences {
 	}
 	
 
-	function word($numWords = 1) {
-		$word_list = '';
-		
-		for ($count = 1; $count <= $numWords; $count++) {
-			if ($count > 1) {
-				$word_list .= ' ';
-			}
-			$list_to_use = rand(0, sizeof($this->wordlists) - 1);
-			$word_to_use = rand(0, sizeof($this->wordlists[$this->lists[$list_to_use]]) - 1);
-			
-			$word = $this->wordlists[$this->lists[$list_to_use]][$word_to_use];
-			
-			if (strpos($word, ' ')) {
-				$word = substr_replace($word, '', strpos($word, ' '));
-			}
-			
-			$word = trim($word);
-			$word_list .= strtolower($word);
-		}
-		$this->output = $word_list;
-		return $this->output;
-	}
+//	function word($numWords = 1) {
+//		$word_list = '';
+//		
+//		for ($count = 1; $count <= $numWords; $count++) {
+//			if ($count > 1) {
+//				$word_list .= ' ';
+//			}
+//			$list_to_use = rand(0, sizeof($this->wordlists) - 1);
+//			$word_to_use = rand(0, sizeof($this->wordlists[$this->lists[$list_to_use]]) - 1);
+//			
+//			$word = $this->wordlists[$this->lists[$list_to_use]][$word_to_use];
+//			
+//			if (strpos($word, ' ')) {
+//				$word = substr_replace($word, '', strpos($word, ' '));
+//			}
+//			
+//			$word = trim($word);
+//			$word_list .= strtolower($word);
+//		}
+//		$this->output = $word_list;
+//		return $this->output;
+//	}
 }
 

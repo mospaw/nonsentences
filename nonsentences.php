@@ -2,9 +2,9 @@
 /**
  * Nonsentences
  *
- * V1.1 - 2015-May-08
+ * V1.2 - 2015-May-09
  * 
- * A nonsense sentence generator.
+ * A nonsense sentence and title generator.
  * Copyright 2015 Chris Mospaw
  * 
  * Original code based on Nonsense Generator 2.0.3
@@ -21,6 +21,11 @@
  *
  */
 
+// Add WP-CLI support if needed.
+if ( defined('WP_CLI') && WP_CLI ) {
+    include __DIR__ . '/wp-cli.php';
+}
+
 class Nonsentences {
 
 	protected $lists = array( "interjections", "determiners", "adjectives", "nouns", "adverbs", "verbs", "prepositions", "conjunctions", "comparatives" );
@@ -28,6 +33,7 @@ class Nonsentences {
 	protected $wordlists = array();
 	protected $punctuation = array( ',', '.', '?', '!' );
 	protected $sentence_structures;
+	protected $title_structures;
 
 	public $min_sentences = 3;
 	public $max_sentences;
@@ -61,10 +67,12 @@ class Nonsentences {
 			$this->wordlists[$part] = file( realpath( dirname( __FILE__ ) ) . '/db/' . $part . '.txt' );
 		}
 
-		// Sentence structures ... each is randomly selected. The first tow are weighted since they're a bit more "normal",
+		// Sentence structures ... each is randomly selected. The first two are weighted since they're a bit more "normal",
 		$this->sentence_structures = array (
 			split(' ', '[determiners] [adjectives] [nouns] [verbs] [prepositions] [determiners] [nouns] .'),
 			split(' ', '[determiners] [adjectives] [nouns] [verbs] [prepositions] [determiners] [nouns] .'),
+			split(' ', '[determiners] [adjectives] [nouns] [verbs] [prepositions] [determiners] [nouns] .'),
+			split(' ', '[determiners] [adjectives] [nouns] [adverbs] [verbs] [prepositions] [determiners] [adjectives] [nouns] .'),
 			split(' ', '[determiners] [adjectives] [nouns] [adverbs] [verbs] [prepositions] [determiners] [adjectives] [nouns] .'),
 			split(' ', '[determiners] [adjectives] [nouns] [adverbs] [verbs] [prepositions] [determiners] [adjectives] [nouns] .'),
 			split(' ', '[interjections] , [determiners] [nouns] is [comparatives] [adjectives] than [determiners] [adjectives] [nouns] .'),
@@ -72,6 +80,16 @@ class Nonsentences {
 			split(' ', '[determiners] [nouns] , [adverbs] [verbs] the [nouns] .'),
 			split(' ', '[interjections] ! The [nouns] [verbs] the [nouns] .'),
 		);
+
+
+	// Title structures ... each is randomly selected.
+		$this->title_structures = array (
+			split(' ', '[determiners] [nouns] [verbs]'),
+			split(' ', '[adverbs] [verbs] [nouns]'),
+			split(' ', '[interjections] , [determiners] [nouns] [verbs]'),
+			split(' ', '[adjectives] [nouns]'),
+		);
+
 
 	}
 
@@ -96,6 +114,10 @@ class Nonsentences {
 	}
 
 
+	/**
+	 * Return a number of paragraphs of assembled from random sentences, wrapped in the 
+	 * configured wrapper.
+	 */
 	public function paragraphs( ) {
 
 		if ( $this->max_paragraphs === null ) {
@@ -121,10 +143,24 @@ class Nonsentences {
 	 * Generate one nonsense sentence
 	 */
 	public function sentence() {
-	
+		return $this->get_words( 'sentence_structures' );
+	}
+
+	/** 
+	 * Generate one nonsense title
+	 */
+	public function title() {
+		return $this->get_words( 'title_structures' );
+	}
+
+	/**
+	 * Get a list of words assembled from ramdom words in the lists as determined by the
+	 * passed structure type.
+	 */
+	public function get_words( $structure_type ) {	
 		$wordcount = array();
 
-		$type = rand( 0, (count($this->sentence_structures) - 1 ) );
+		$type = rand( 0, (count($this->{$structure_type}) - 1 ) );
 
 		$nouns = '';
 		for ( $i=0; $i < 2; $i++ ) {
@@ -135,45 +171,45 @@ class Nonsentences {
 		
 		}
 		
-		$sentence_structure = $this->sentence_structures[$type];
-		$sentence = '';
+		$sentence_structure = $this->{$structure_type}[$type];
+		$word_list = '';
 		foreach ($sentence_structure as $position => $word) {
 
 			switch (1) {
 
 				case ( $position == 0 ) :
 					$word = str_replace( array( '[' , ']' ), array ( '', ''), $word );
-					$sentence .= ucfirst( ${$word}[ $wordcount[$word] ] );
+					$word_list .= ucfirst( ${$word}[ $wordcount[$word] ] );
 					$wordcount[ $word ]++;
 				break;
 
 				case ( $word == '[plural_nouns]') :
-					$sentence .= $nouns[ $wordcount['nouns'] ] . 's';
+					$word_list .= $nouns[ $wordcount['nouns'] ] . 's';
 					$wordcount['nouns']++;
 				break;
 
 				case ( substr($word, 0, 1) == '[') :
 					$word = str_replace( array( '[' , ']' ), array ( '', ''), $word );
-					$sentence .= ${$word}[ $wordcount[$word] ];
+					$word_list .= ${$word}[ $wordcount[$word] ];
 					$wordcount[ $word ]++;
 				break;
 
 				case ( ! in_array( $word, $this->punctuation) ) :
-					$sentence .= $word;
+					$word_list .= $word;
 				break;
 
 			}
 
 			if ( in_array( $word, $this->punctuation)) {
-				$sentence = trim( $sentence ) . $word . ' ';
+				$word_list = trim( $word_list ) . $word . ' ';
 			}
 			else {
-				$sentence .= ' ';
+				$word_list .= ' ';
 			}
 
 		}
 		
-		return $sentence;
+		return $word_list;
 	}
 	
 }

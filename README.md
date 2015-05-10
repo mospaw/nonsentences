@@ -2,16 +2,26 @@
 
 A revival of Jeff Holman's nonsense generator. Original script: http://www.jholman.com/scripts/nonsense/
 
-This project is still in very early development. In other words, the code isn't fully converted, optimized, or even pretty. There is redundant commented-out code, and other issues.
+This project is still in very early development. In other words, the code isn't fully converted, optimized, 
+or even pretty. The sentence and title generators reply on the word lists in the `db` folder. 
 
-See `index.php` for an example of use.
+See `index.php` for an example of use and some configuration
 
 # Todo
 
-Turn add [WP-CLI](http://wp-cli.org/) support to generate a post or posts with generated content.
-
+- Add [WP-CLI](http://wp-cli.org/) support to generate a post or posts with generated content.
+- Document options for code-based usage.
 
 # Changes
+
+## V1.2
+
+- Abstract word list generator into wrappable `get_words()` method
+- Change `sentence()` method to wrap `get_words()`
+- Add support for titles, including word list structure, using `get_words()`
+- Add logic to add WP-CLI support in main file
+- Add stub for WP-CLI support
+- Add additional "normal" sentence structure duplicates
 
 ## V1.1
 

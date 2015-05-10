@@ -7,9 +7,9 @@ $args = array(
 	'max_sentences' => 20,
 	'min_paragraphs' => 2,
 	'max_paragraphs' => 10,
-	'paragraph_wrapper' => array ( '', "\n\n" ),
 );
 
 $nonsentence = new Nonsentences( $args );
 
+echo '<h1>' . $nonsentence->title() . '</h1>' . PHP_EOL;
 echo $nonsentence->paragraphs();

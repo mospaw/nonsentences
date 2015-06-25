@@ -2,7 +2,7 @@
 /**
  * Nonsentences
  *
- * V1.2 - 2015-May-09
+ * V1.3 - 2015-Jun-24
  * 
  * A nonsense sentence and title generator.
  * Copyright 2015 Chris Mospaw
@@ -23,7 +23,7 @@
 
 // Add WP-CLI support if needed.
 if ( defined('WP_CLI') && WP_CLI ) {
-    include __DIR__ . '/wp-cli.php';
+	include_once __DIR__ . '/wp-cli.php';
 }
 
 class Nonsentences {
@@ -41,6 +41,10 @@ class Nonsentences {
 	public $max_paragraphs;
 	public $paragraph_wrapper = array ( '<p>', '</p>' );
 
+	// Used by WP-CLI
+	public $number_of_posts;
+	public $post_type;
+
 	public function __construct( $args ) {
 
 		if ( isset ( $args['min_sentences'] ) ) {
@@ -57,6 +61,14 @@ class Nonsentences {
 
 		if ( isset ( $args['max_paragraphs'] ) ) {
 			$this->max_paragraphs = $args['max_paragraphs'];
+		}
+
+		if ( isset ( $args['number_of_posts'] ) ) {
+			$this->number_of_posts = $args['number_of_posts'];
+		}
+
+		if ( isset ( $args['post_type'] ) ) {
+			$this->post_type = $args['post_type'];
 		}
 
 		if ( isset ( $args['paragraph_wrapper'] ) ) {

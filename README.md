@@ -5,14 +5,42 @@ A revival of Jeff Holman's nonsense generator. Original script: http://www.jholm
 This project is still in very early development. In other words, the code isn't fully converted, optimized, 
 or even pretty. The sentence and title generators reply on the word lists in the `db` folder. 
 
-See `index.php` for an example of use and some configuration
+See `example.php` for an example of use and some configuration and how to use it outside of WP-CLI.
+
+# WP-CLI usage
+
+`wp --require=nonsentences.php nonsentences generate_posts`
+
+## Parameters and defaults
+
+```
+'min_sentences' => 3,
+'max_sentences' => 20,
+'min_paragraphs' => 2,
+'max_paragraphs' => 10,
+'post_type' => 'post',
+'number_of_posts' => 10,
+```
+
+`post_type` is currently not checked for validity. 
+
+The number of sentences in a paragraph is a random number between the two relevant parameters.
+
+The number of paragraphs per post is a random number between the two relevant parameters.
 
 # Todo
 
-- Add [WP-CLI](http://wp-cli.org/) support to generate a post or posts with generated content.
+- Add additional [WP-CLI](http://wp-cli.org/) support to generate a post or posts with generated content.
 - Document options for code-based usage.
+- Restructure as WordPress plugin that includes WP-CLI functionality and wp-admin
 
 # Changes
+
+## V1.3
+
+- Initial work to add WP-CLI integration via `generate_posts`
+- Rename `index.php` to `example.php`
+- Add `.gitignore` to allow a WordPress installation in `wp/` folder and WordPress `index.php` and `wp-config.php` in root
 
 ## V1.2
 

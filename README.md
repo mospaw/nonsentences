@@ -1,6 +1,6 @@
 # nonsentences
 
-A revival of Jeff Holman's nonsense generator. Original script: http://www.jholman.com/scripts/nonsense/
+A revival of Jeff Holman's nonsense generator. Original script: http://www.jholman.com/scripts/nonsense/ (note that there are reports of malware on this site and it might not be the original site any more).
 
 This project is still in very early development. In other words, the code isn't fully converted, optimized, 
 or even pretty. The sentence and title generators reply on the word lists in the `db` folder. 

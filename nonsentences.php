@@ -3,10 +3,10 @@
  * Nonsentences
  *
  * V1.3 - 2015-Jun-24
- * 
+ *
  * A nonsense sentence and title generator.
  * Copyright 2015 Chris Mospaw
- * 
+ *
  * Original code based on Nonsense Generator 2.0.3
  * http://www.jholman.com/scripts/nonsense/
  *
@@ -16,212 +16,206 @@
  * of the License, or (at your option) any later version.
  *
  * See LICENSE.md for the terms of the GNU GPL.
- * 
+ *
  * See help.html for installation and usage instructions.
  *
  */
 
 // Add WP-CLI support if needed.
-if ( defined('WP_CLI') && WP_CLI ) {
-	include_once __DIR__ . '/wp-cli.php';
+if (defined('WP_CLI') && WP_CLI) {
+    include_once __DIR__ . '/wp-cli.php';
 }
 
-class Nonsentences {
+class Nonsentences
+{
+    protected $lists = array( "interjections", "determiners", "adjectives", "nouns", "adverbs", "verbs", "prepositions", "conjunctions", "comparatives" );
+    protected $vowels = array( 'a', 'e', 'i', 'o', 'u' );
+    protected $wordlists = array();
+    protected $punctuation = array( ',', '.', '?', '!' );
+    protected $sentence_structures;
+    protected $title_structures;
 
-	protected $lists = array( "interjections", "determiners", "adjectives", "nouns", "adverbs", "verbs", "prepositions", "conjunctions", "comparatives" );
-	protected $vowels = array( 'a', 'e', 'i', 'o', 'u' );
-	protected $wordlists = array();
-	protected $punctuation = array( ',', '.', '?', '!' );
-	protected $sentence_structures;
-	protected $title_structures;
+    public $min_sentences = 3;
+    public $max_sentences;
+    public $min_paragraphs = 3;
+    public $max_paragraphs;
+    public $paragraph_wrapper = array( '<p>', '</p>' );
 
-	public $min_sentences = 3;
-	public $max_sentences;
-	public $min_paragraphs = 3;
-	public $max_paragraphs;
-	public $paragraph_wrapper = array ( '<p>', '</p>' );
+    // Used by WP-CLI
+    public $number_of_posts;
+    public $post_type;
 
-	// Used by WP-CLI
-	public $number_of_posts;
-	public $post_type;
+    public function __construct($args)
+    {
+        if (isset($args['min_sentences'])) {
+            $this->min_sentences = $args['min_sentences'];
+        }
 
-	public function __construct( $args ) {
+        if (isset($args['max_sentences'])) {
+            $this->max_sentences = $args['max_sentences'];
+        }
 
-		if ( isset ( $args['min_sentences'] ) ) {
-			$this->min_sentences = $args['min_sentences'];
-		}
+        if (isset($args['min_paragraphs'])) {
+            $this->min_paragraphs = $args['min_paragraphs'];
+        }
 
-		if ( isset ( $args['max_sentences'] ) ) {
-			$this->max_sentences = $args['max_sentences'];
-		}
+        if (isset($args['max_paragraphs'])) {
+            $this->max_paragraphs = $args['max_paragraphs'];
+        }
 
-		if ( isset ( $args['min_paragraphs'] ) ) {
-			$this->min_paragraphs = $args['min_paragraphs'];
-		}
+        if (isset($args['number_of_posts'])) {
+            $this->number_of_posts = $args['number_of_posts'];
+        }
 
-		if ( isset ( $args['max_paragraphs'] ) ) {
-			$this->max_paragraphs = $args['max_paragraphs'];
-		}
+        if (isset($args['post_type'])) {
+            $this->post_type = $args['post_type'];
+        }
 
-		if ( isset ( $args['number_of_posts'] ) ) {
-			$this->number_of_posts = $args['number_of_posts'];
-		}
+        if (isset($args['paragraph_wrapper'])) {
+            $this->paragraph_wrapper = $args['paragraph_wrapper'];
+        }
 
-		if ( isset ( $args['post_type'] ) ) {
-			$this->post_type = $args['post_type'];
-		}
+        foreach ($this->lists as $part) {
+            $this->wordlists[$part] = file(realpath(dirname(__FILE__)) . '/db/' . $part . '.txt');
+        }
 
-		if ( isset ( $args['paragraph_wrapper'] ) ) {
-			$this->paragraph_wrapper = $args['paragraph_wrapper'];
-		}
-
-		foreach ($this->lists as $part) {
-			$this->wordlists[$part] = file( realpath( dirname( __FILE__ ) ) . '/db/' . $part . '.txt' );
-		}
-
-		// Sentence structures ... each is randomly selected. The first two are weighted since they're a bit more "normal",
-		$this->sentence_structures = array (
-			split(' ', '[determiners] [adjectives] [nouns] [verbs] [prepositions] [determiners] [nouns] .'),
-			split(' ', '[determiners] [adjectives] [nouns] [verbs] [prepositions] [determiners] [nouns] .'),
-			split(' ', '[determiners] [adjectives] [nouns] [verbs] [prepositions] [determiners] [nouns] .'),
-			split(' ', '[determiners] [adjectives] [nouns] [adverbs] [verbs] [prepositions] [determiners] [adjectives] [nouns] .'),
-			split(' ', '[determiners] [adjectives] [nouns] [adverbs] [verbs] [prepositions] [determiners] [adjectives] [nouns] .'),
-			split(' ', '[determiners] [adjectives] [nouns] [adverbs] [verbs] [prepositions] [determiners] [adjectives] [nouns] .'),
-			split(' ', '[interjections] , [determiners] [nouns] is [comparatives] [adjectives] than [determiners] [adjectives] [nouns] .'),
-			split(' ', '[adjectives] [plural_nouns] [verbs] [prepositions] [plural_nouns] [adverbs] .'),
-			split(' ', '[determiners] [nouns] , [adverbs] [verbs] the [nouns] .'),
-			split(' ', '[interjections] ! The [nouns] [verbs] the [nouns] .'),
-		);
-
-
-	// Title structures ... each is randomly selected.
-		$this->title_structures = array (
-			split(' ', '[determiners] [nouns] [verbs]'),
-			split(' ', '[adverbs] [verbs] [nouns]'),
-			split(' ', '[interjections] , [determiners] [nouns] [verbs]'),
-			split(' ', '[adjectives] [nouns]'),
-		);
+        // Sentence structures ... each is randomly selected. The first two are weighted since they're a bit more "normal",
+        $this->sentence_structures = array(
+            split(' ', '[determiners] [adjectives] [nouns] [verbs] [prepositions] [determiners] [nouns] .'),
+            split(' ', '[determiners] [adjectives] [nouns] [verbs] [prepositions] [determiners] [nouns] .'),
+            split(' ', '[determiners] [adjectives] [nouns] [verbs] [prepositions] [determiners] [nouns] .'),
+            split(' ', '[determiners] [adjectives] [nouns] [adverbs] [verbs] [prepositions] [determiners] [adjectives] [nouns] .'),
+            split(' ', '[determiners] [adjectives] [nouns] [adverbs] [verbs] [prepositions] [determiners] [adjectives] [nouns] .'),
+            split(' ', '[determiners] [adjectives] [nouns] [adverbs] [verbs] [prepositions] [determiners] [adjectives] [nouns] .'),
+            split(' ', '[interjections] , [determiners] [nouns] is [comparatives] [adjectives] than [determiners] [adjectives] [nouns] .'),
+            split(' ', '[adjectives] [plural_nouns] [verbs] [prepositions] [plural_nouns] [adverbs] .'),
+            split(' ', '[determiners] [nouns] , [adverbs] [verbs] the [nouns] .'),
+            split(' ', '[interjections] ! The [nouns] [verbs] the [nouns] .'),
+        );
 
 
-	}
+        // Title structures ... each is randomly selected.
+        $this->title_structures = array(
+            split(' ', '[determiners] [nouns] [verbs]'),
+            split(' ', '[adverbs] [verbs] [nouns]'),
+            split(' ', '[interjections] , [determiners] [nouns] [verbs]'),
+            split(' ', '[adjectives] [nouns]'),
+        );
+    }
 
-	/**
-	 * Get a number of nonsense sentences
-	 */
-	public function sentences( ) {
+    /**
+     * Get a number of nonsense sentences
+     */
+    public function sentences()
+    {
+        if ($this->max_sentences === null) {
+            $this->max_sentences = $this->min_sentences;
+        }
 
-		if ( $this->max_sentences === null ) {
-			$this->max_sentences = $this->min_sentences;
-		}
+        $count = rand($this->min_sentences, $this->max_sentences);
 
-		$count = rand ( $this->min_sentences, $this->max_sentences );
+        $output = '';
 
-		$output = '';
-
-		for ( $x=0; $x < $count; $x++ ) {
-			$output .= $this->sentence() . ' ';
-		}
-		return $output;
-
-	}
-
-
-	/**
-	 * Return a number of paragraphs of assembled from random sentences, wrapped in the 
-	 * configured wrapper.
-	 */
-	public function paragraphs( ) {
-
-		if ( $this->max_paragraphs === null ) {
-			$this->max_paragraphs = $this->min_paragraphs;
-		}
-
-		$count = rand ( $this->min_paragraphs, $this->max_paragraphs );
-
-		$output = '';
-
-		for ( $x=0; $x < $count; $x++ ) {
-			$output .= $this->paragraph_wrapper[0];
-			$output .= $this->sentences() . ' ';
-			$output .= $this->paragraph_wrapper[1];
-		}
-
-		return $output . PHP_EOL;		
-
-	}
+        for ($x=0; $x < $count; $x++) {
+            $output .= $this->sentence() . ' ';
+        }
+        return $output;
+    }
 
 
-	/** 
-	 * Generate one nonsense sentence
-	 */
-	public function sentence() {
-		return $this->get_words( 'sentence_structures' );
-	}
+    /**
+     * Return a number of paragraphs of assembled from random sentences, wrapped in the
+     * configured wrapper.
+     */
+    public function paragraphs()
+    {
+        if ($this->max_paragraphs === null) {
+            $this->max_paragraphs = $this->min_paragraphs;
+        }
 
-	/** 
-	 * Generate one nonsense title
-	 */
-	public function title() {
-		return $this->get_words( 'title_structures' );
-	}
+        $count = rand($this->min_paragraphs, $this->max_paragraphs);
 
-	/**
-	 * Get a list of words assembled from ramdom words in the lists as determined by the
-	 * passed structure type.
-	 */
-	public function get_words( $structure_type ) {	
-		$wordcount = array();
+        $output = '';
 
-		$type = rand( 0, (count($this->{$structure_type}) - 1 ) );
+        for ($x=0; $x < $count; $x++) {
+            $output .= $this->paragraph_wrapper[0];
+            $output .= $this->sentences() . ' ';
+            $output .= $this->paragraph_wrapper[1];
+        }
 
-		$nouns = '';
-		for ( $i=0; $i < 2; $i++ ) {
-			foreach ($this->lists as $part) {
-				${$part}[$i] = trim($this->wordlists[$part][rand(0,count($this->wordlists[$part]) - 1)]);
-				$wordcount[$part] = 0;
-			}
-		
-		}
-		
-		$sentence_structure = $this->{$structure_type}[$type];
-		$word_list = '';
-		foreach ($sentence_structure as $position => $word) {
+        return $output . PHP_EOL;
+    }
 
-			switch (1) {
 
-				case ( $position == 0 ) :
-					$word = str_replace( array( '[' , ']' ), array ( '', ''), $word );
-					$word_list .= ucfirst( ${$word}[ $wordcount[$word] ] );
-					$wordcount[ $word ]++;
-				break;
+    /**
+     * Generate one nonsense sentence
+     */
+    public function sentence()
+    {
+        return $this->get_words('sentence_structures');
+    }
 
-				case ( $word == '[plural_nouns]') :
-					$word_list .= $nouns[ $wordcount['nouns'] ] . 's';
-					$wordcount['nouns']++;
-				break;
+    /**
+     * Generate one nonsense title
+     */
+    public function title()
+    {
+        return $this->get_words('title_structures');
+    }
 
-				case ( substr($word, 0, 1) == '[') :
-					$word = str_replace( array( '[' , ']' ), array ( '', ''), $word );
-					$word_list .= ${$word}[ $wordcount[$word] ];
-					$wordcount[ $word ]++;
-				break;
+    /**
+     * Get a list of words assembled from ramdom words in the lists as determined by the
+     * passed structure type.
+     */
+    public function get_words($structure_type)
+    {
+        $wordcount = array();
 
-				case ( ! in_array( $word, $this->punctuation) ) :
-					$word_list .= $word;
-				break;
+        $type = rand(0, (count($this->{$structure_type}) - 1));
 
-			}
+        $nouns = '';
+        for ($i=0; $i < 2; $i++) {
+            foreach ($this->lists as $part) {
+                ${$part}[$i] = trim($this->wordlists[$part][rand(0, count($this->wordlists[$part]) - 1)]);
+                $wordcount[$part] = 0;
+            }
+        }
+        
+        $sentence_structure = $this->{$structure_type}[$type];
+        $word_list = '';
+        foreach ($sentence_structure as $position => $word) {
+            switch (1) {
 
-			if ( in_array( $word, $this->punctuation)) {
-				$word_list = trim( $word_list ) . $word . ' ';
-			}
-			else {
-				$word_list .= ' ';
-			}
+                case ($position == 0):
+                    $word = str_replace(array( '[' , ']' ), array( '', ''), $word);
+                    $word_list .= ucfirst(${$word}[ $wordcount[$word] ]);
+                    $wordcount[ $word ]++;
+                break;
 
-		}
-		
-		return $word_list;
-	}
-	
+                case ($word == '[plural_nouns]'):
+                    $word_list .= $nouns[ $wordcount['nouns'] ] . 's';
+                    $wordcount['nouns']++;
+                break;
+
+                case (substr($word, 0, 1) == '['):
+                    $word = str_replace(array( '[' , ']' ), array( '', ''), $word);
+                    $word_list .= ${$word}[ $wordcount[$word] ];
+                    $wordcount[ $word ]++;
+                break;
+
+                case (! in_array($word, $this->punctuation)):
+                    $word_list .= $word;
+                break;
+
+            }
+
+            if (in_array($word, $this->punctuation)) {
+                $word_list = trim($word_list) . $word . ' ';
+            } else {
+                $word_list .= ' ';
+            }
+        }
+        
+        return $word_list;
+    }
 }

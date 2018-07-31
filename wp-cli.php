@@ -38,7 +38,7 @@ class Nonsentences_Command extends WP_CLI_Command
         }
 
         for ($x = 0; $x < $this->nonsentences->number_of_posts; $x++) {
-            wp_insert_post(
+            $insert_id = wp_insert_post(
                 array(
                 'post_title' => $this->nonsentences->title(),
                 'post_content' =>  $this->nonsentences->paragraphs(),
@@ -46,6 +46,10 @@ class Nonsentences_Command extends WP_CLI_Command
                 'post_type' => $this->nonsentences->post_type,
                 )
             );
+            
+            if (is_numeric($insert_id) && $this->nonsentences->taxonomy && $this->nonsentences->taxonomy_term) {
+                wp_set_post_terms($insert_id, $this->nonsentences->taxonomy_term, $this->nonsentences->taxonomy);
+            }
         }
 
         WP_CLI::line('Inserted ' .  $this->nonsentences->number_of_posts . ' ' . $this->nonsentences->post_type . $s . '.');

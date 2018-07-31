@@ -2,8 +2,8 @@
 
 A revival of Jeff Holman's nonsense generator. Original script: http://www.jholman.com/scripts/nonsense/ (note that there are reports of malware on this site and it might not be the original site any more).
 
-This project is still in very early development. In other words, the code isn't fully converted, optimized, 
-or even pretty. The sentence and title generators reply on the word lists in the `db` folder. 
+This project is still in very early development. In other words, the code isn't fully converted, optimized,
+or even pretty. The sentence and title generators reply on the word lists in the `db` folder.
 
 See `example.php` for an example of use and some configuration and how to use it outside of WP-CLI.
 
@@ -22,11 +22,18 @@ See `example.php` for an example of use and some configuration and how to use it
 'number_of_posts' => 10,
 ```
 
-`post_type` is currently not checked for validity. 
+`post_type` is currently not checked for validity.
 
 The number of sentences in a paragraph is a random number between the two relevant parameters.
 
 The number of paragraphs per post is a random number between the two relevant parameters.
+
+A single optional taxonomy and term (or comma-separated list of terms) can be added as well via:
+
+```
+'taxonomy' => 'taxonomy_slug',
+'taxonomy_term' => 'taxonomy term',
+```
 
 # Todo
 
@@ -35,6 +42,13 @@ The number of paragraphs per post is a random number between the two relevant pa
 - Restructure as WordPress plugin that includes WP-CLI functionality and wp-admin
 
 # Changes
+
+## V1.4
+
+- Changed function calls to use non-deprecated (or removed) functions
+- Added rudimentary taxonomy support
+- Fixed a bug in specific word types that casued them to be added as one-character instead of the full word
+- Verified working in PHP 7.2
 
 ## V1.3
 

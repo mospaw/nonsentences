@@ -2,13 +2,13 @@
 /**
  * Nonsentences
  *
- * V1.3 - 2015-Jun-24
+ * V1.4 - 2018-Jul-30
  *
  * A nonsense sentence and title generator.
- * Copyright 2015 Chris Mospaw
+ * Copyright 2015-2018 Chris Mospaw
  *
  * Original code based on Nonsense Generator 2.0.3
- * http://www.jholman.com/scripts/nonsense/
+ * http://www.jholman.com/scripts/nonsense/ (URL now defunct)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,7 +17,7 @@
  *
  * See LICENSE.md for the terms of the GNU GPL.
  *
- * See help.html for installation and usage instructions.
+ * See README.md / example.php for installation and usage instructions.
  *
  */
 
@@ -40,6 +40,8 @@ class Nonsentences
     public $min_paragraphs = 3;
     public $max_paragraphs;
     public $paragraph_wrapper = array( '<p>', '</p>' );
+    public $taxonomy;
+    public $taxonomy_term;
 
     // Used by WP-CLI
     public $number_of_posts;
@@ -75,31 +77,41 @@ class Nonsentences
             $this->paragraph_wrapper = $args['paragraph_wrapper'];
         }
 
+        if (isset($args['taxonomy'])) {
+            $this->taxonomy = $args['taxonomy'];
+        }
+
+        if (isset($args['taxonomy_term'])) {
+            $this->taxonomy_term = $args['taxonomy_term'];
+        }
+
+        
         foreach ($this->lists as $part) {
             $this->wordlists[$part] = file(realpath(dirname(__FILE__)) . '/db/' . $part . '.txt');
         }
 
         // Sentence structures ... each is randomly selected. The first two are weighted since they're a bit more "normal",
         $this->sentence_structures = array(
-            split(' ', '[determiners] [adjectives] [nouns] [verbs] [prepositions] [determiners] [nouns] .'),
-            split(' ', '[determiners] [adjectives] [nouns] [verbs] [prepositions] [determiners] [nouns] .'),
-            split(' ', '[determiners] [adjectives] [nouns] [verbs] [prepositions] [determiners] [nouns] .'),
-            split(' ', '[determiners] [adjectives] [nouns] [adverbs] [verbs] [prepositions] [determiners] [adjectives] [nouns] .'),
-            split(' ', '[determiners] [adjectives] [nouns] [adverbs] [verbs] [prepositions] [determiners] [adjectives] [nouns] .'),
-            split(' ', '[determiners] [adjectives] [nouns] [adverbs] [verbs] [prepositions] [determiners] [adjectives] [nouns] .'),
-            split(' ', '[interjections] , [determiners] [nouns] is [comparatives] [adjectives] than [determiners] [adjectives] [nouns] .'),
-            split(' ', '[adjectives] [plural_nouns] [verbs] [prepositions] [plural_nouns] [adverbs] .'),
-            split(' ', '[determiners] [nouns] , [adverbs] [verbs] the [nouns] .'),
-            split(' ', '[interjections] ! The [nouns] [verbs] the [nouns] .'),
+            explode(' ', '[determiners] [adjectives] [nouns] [verbs] [prepositions] [determiners] [nouns] .'),
+            explode(' ', '[determiners] [adjectives] [nouns] [verbs] [prepositions] [determiners] [nouns] .'),
+            explode(' ', '[determiners] [adjectives] [nouns] [verbs] [prepositions] [determiners] [nouns] .'),
+            explode(' ', '[determiners] [adjectives] [nouns] [adverbs] [verbs] [prepositions] [determiners] [adjectives] [nouns] .'),
+            explode(' ', '[determiners] [adjectives] [nouns] [adverbs] [verbs] [prepositions] [determiners] [adjectives] [nouns] .'),
+            explode(' ', '[determiners] [adjectives] [nouns] [adverbs] [verbs] [prepositions] [determiners] [adjectives] [nouns] .'),
+            explode(' ', '[interjections] , [determiners] [nouns] is [comparatives] [adjectives] than [determiners] [adjectives] [nouns] .'),
+            explode(' ', '[adjectives] [plural_nouns] [verbs] [prepositions] [plural_nouns] [adverbs] .'),
+            explode(' ', '[determiners] [nouns] , [adverbs] [verbs] the [nouns] .'),
+            explode(' ', '[interjections] ! The [nouns] [verbs] the [nouns] .'),
         );
 
 
         // Title structures ... each is randomly selected.
         $this->title_structures = array(
-            split(' ', '[determiners] [nouns] [verbs]'),
-            split(' ', '[adverbs] [verbs] [nouns]'),
-            split(' ', '[interjections] , [determiners] [nouns] [verbs]'),
-            split(' ', '[adjectives] [nouns]'),
+            explode(' ', '[determiners] [nouns] [adverbs] [verbs] [determiners] [nouns]'),
+            explode(' ', '[determiners] [nouns] [verbs]'),
+            explode(' ', '[adverbs] [verbs] [nouns]'),
+            explode(' ', '[interjections] , [determiners] [nouns] [verbs]'),
+            explode(' ', '[adjectives] [nouns]'),
         );
     }
 
@@ -173,14 +185,13 @@ class Nonsentences
 
         $type = rand(0, (count($this->{$structure_type}) - 1));
 
-        $nouns = '';
         for ($i=0; $i < 2; $i++) {
             foreach ($this->lists as $part) {
                 ${$part}[$i] = trim($this->wordlists[$part][rand(0, count($this->wordlists[$part]) - 1)]);
                 $wordcount[$part] = 0;
             }
         }
-        
+   
         $sentence_structure = $this->{$structure_type}[$type];
         $word_list = '';
         foreach ($sentence_structure as $position => $word) {

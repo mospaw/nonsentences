@@ -8,3 +8,6 @@ quite a bit more
 quite a bit less
 greater than
 less than
+equal to
+somewhat more than
+somewhat less than
